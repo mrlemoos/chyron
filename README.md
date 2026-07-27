@@ -90,13 +90,7 @@ Then restart Claude Code (or reload via `/statusline`).
 
 ## Configuration
 
-The context window is hardcoded near the top of the script:
-
-```sh
-WINDOW=200000
-```
-
-Bump it to `1000000` if you run a 1M-context model. Colors, bar width (`width=12`), and thresholds are plain values in the `awk` block — edit to taste.
+The context window size is auto-detected from the harness stdin JSON (`.context_window.context_window_size`), so 200k vs 1M models are handled automatically. It falls back to `200000` only if the harness omits it. Colors, bar width (`width=12`), and thresholds are plain values in the `awk` block — edit to taste.
 
 ## License
 
