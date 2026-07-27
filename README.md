@@ -1,4 +1,4 @@
-# claude-context-statusline
+# Chyron
 
 A [Claude Code](https://claude.com/claude-code) status line that shows how much of the model's context window you've consumed: a colored progress bar, a grouped token count, and a percentage.
 
@@ -20,6 +20,8 @@ input_tokens + cache_read_input_tokens + cache_creation_input_tokens
 
 (Output tokens are not carried into the next turn, so they're excluded.) That total is divided by the context window to get the percentage.
 
+After `/compact`, Claude Code drops the context but writes no new `usage` entry until you next reply — so a naive "last usage" reading stays frozen at the pre-compact value. The script folds through the transcript in order and honors the `compact_boundary` marker's `postTokens`, so the bar drops immediately on compaction.
+
 ## Requirements
 
 - `jq`
@@ -27,11 +29,21 @@ input_tokens + cache_read_input_tokens + cache_creation_input_tokens
 
 ## Install
 
+Run the installer — copies the script to `~/.claude/`, `chmod +x`es it, and points `~/.claude/settings.json` at it (existing settings preserved):
+
+```sh
+./install.sh
+```
+
+Then restart Claude Code (or reload via `/statusline`).
+
+### Manual
+
 1. Copy the script somewhere stable:
 
    ```sh
-   cp statusline-context.sh ~/.claude/statusline-context.sh
-   chmod +x ~/.claude/statusline-context.sh
+   cp chyron.sh ~/.claude/chyron.sh
+   chmod +x ~/.claude/chyron.sh
    ```
 
 2. Point your `~/.claude/settings.json` at it:
@@ -40,7 +52,7 @@ input_tokens + cache_read_input_tokens + cache_creation_input_tokens
    {
      "statusLine": {
        "type": "command",
-       "command": "bash \"/Users/YOU/.claude/statusline-context.sh\""
+       "command": "bash \"/Users/YOU/.claude/chyron.sh\""
      }
    }
    ```

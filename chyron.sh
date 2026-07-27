@@ -7,11 +7,16 @@ in=$(cat)
 tp=$(printf '%s' "$in" | jq -r '.transcript_path // empty')
 used=0
 if [ -n "$tp" ] && [ -f "$tp" ]; then
+  # Fold in document order: a compact_boundary resets context to postTokens (the
+  # last assistant usage is pre-compact and stale until the next reply lands).
   used=$(jq -s '
-    [ .[] | select(.type=="assistant" and (.isSidechain|not) and .message.usage)
-          | .message.usage
-          | (.input_tokens // 0) + (.cache_read_input_tokens // 0) + (.cache_creation_input_tokens // 0)
-    ] | last // 0' "$tp" 2>/dev/null)
+    reduce .[] as $e (0;
+      if ($e.type=="system" and $e.subtype=="compact_boundary" and $e.compactMetadata.postTokens)
+      then $e.compactMetadata.postTokens
+      elif ($e.type=="assistant" and ($e.isSidechain|not) and $e.message.usage)
+      then ($e.message.usage
+            | (.input_tokens//0)+(.cache_read_input_tokens//0)+(.cache_creation_input_tokens//0))
+      else . end)' "$tp" 2>/dev/null)
 fi
 [ -z "$used" ] && used=0
 
@@ -23,7 +28,6 @@ awk -v u="$used" -v w="$WINDOW" 'BEGIN{
   col = (pct>=80)? red : (pct>50)? yellow : grey
   fill=""; for(i=0;i<filled;i++) fill=fill "\xe2\x96\x88"    # full block
   empty=""; for(i=filled;i<width;i++) empty=empty "\xe2\x96\x91"  # light shade
-  s=sprintf("%d", u); n=length(s); tok=""
-  for(i=1;i<=n;i++){ tok=tok substr(s,i,1); r=n-i; if(r>0 && r%3==0) tok=tok "." }
+  tok = (u>=1000)? sprintf("%.1fk", u/1000) : sprintf("%d", u)
   printf "%s%s%s%s%s %s tok %s%.0f%%%s", col, fill, grey, empty, reset, tok, col, pct, reset
 }'
