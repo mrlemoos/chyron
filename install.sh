@@ -17,6 +17,18 @@ else                             # piped: curl | bash
   chmod 0755 "$dst"
 fi
 
+# Wizard: which extra segments to show. Reads from /dev/tty so it works under curl|bash.
+# Default yes for both; any non-tty (no /dev/tty) keeps the defaults.
+ask() {  # ask "prompt" -> 0 if yes
+  local reply=y
+  [ -e /dev/tty ] && { printf '  %s [Y/n] ' "$1" >/dev/tty; read -r reply </dev/tty; }
+  case ${reply:-y} in [Nn]*) return 1;; *) return 0;; esac
+}
+conf="$HOME/.claude/chyron.conf"
+ask "Show model name?"         && sm=1 || sm=0
+ask "Show project (dir) name?" && sp=1 || sp=0
+printf 'show_model=%s\nshow_project=%s\n' "$sm" "$sp" > "$conf"
+
 [ -f "$settings" ] || echo '{}' > "$settings"
 tmp=$(mktemp)
 jq --arg cmd "bash \"$dst\"" \
@@ -33,4 +45,5 @@ fi
 printf '\n  %schyron installed%s\n\n' "$b$g" "$r"
 printf '  %s  script    %s%s%s\n' "$ok" "$d" "$dst" "$r"
 printf '  %s  settings  %s%s%s\n' "$ok" "$d" "$settings" "$r"
+printf '  %s  config    %s%s%s\n' "$ok" "$d" "$conf" "$r"
 printf '\n  %sRestart Claude Code or run %s/statusline%s%s to see it.%s\n\n' "$d" "$r$b" "$r" "$d" "$r"

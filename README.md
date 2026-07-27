@@ -14,15 +14,15 @@ A [Claude Code](https://claude.com/claude-code) status line that shows how much 
 
 ## How it works
 
-Claude Code passes each status line command a JSON object on stdin containing `transcript_path`. The script reads the last main-chain assistant message's `usage` and sums the tokens actually held in context:
+Claude Code passes each status line command a JSON object on stdin. The script reads live usage straight from `.context_window`:
 
 ```
-input_tokens + cache_read_input_tokens + cache_creation_input_tokens
+.context_window.total_input_tokens / .context_window.context_window_size
 ```
 
-(Output tokens are not carried into the next turn, so they're excluded.) That total is divided by the context window to get the percentage.
+That ratio is the percentage. Reading it from stdin means the count already reflects `/compact` and cache state — the bar drops immediately on compaction, with no transcript parsing.
 
-After `/compact`, Claude Code drops the context but writes no new `usage` entry until you next reply — so a naive "last usage" reading stays frozen at the pre-compact value. The script folds through the transcript in order and honors the `compact_boundary` marker's `postTokens`, so the bar drops immediately on compaction.
+(An earlier version parsed the transcript file, but Claude Code doesn't reliably flush it to the advertised path, so it read 0.)
 
 ## Requirements
 
@@ -87,6 +87,23 @@ Then restart Claude Code (or reload via `/statusline`).
    ```
 
 3. Restart Claude Code (or reload via the `/statusline` menu).
+
+## Optional segments
+
+The status line can prefix the bar with the model name and/or the project (current directory) name:
+
+```
+Opus 4.8  chyron  ████████░░░░ 130.000 tok 65%
+```
+
+The installer wizard asks about each one and saves your choice to `~/.claude/chyron.conf`:
+
+```sh
+show_model=1
+show_project=1
+```
+
+Edit that file to toggle a segment (`0`/`1`) — no reinstall needed. You can also override per-invocation with the `--model` / `--project` flags, e.g. `chyron --model`.
 
 ## Configuration
 
