@@ -3,6 +3,8 @@
     "chmods",
     "coreutils",
     "mrlemoos",
+    "noconfirm",
+    "pacman",
     "pipefail",
     "sprintf",
     "statusline"
