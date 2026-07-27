@@ -1,26 +1,16 @@
 #!/usr/bin/env bash
 # Context-window usage statusline: colored progress bar + grouped token count + percent.
-# Grey <=50%, yellow 51-80%, red >=80%. Window hardcoded to 200k; bump to 1000000 for a 1M model.
-WINDOW=200000
-
+# Grey <=50%, yellow 51-80%, red >=80%.
+# Reads live usage straight from the harness stdin JSON (.context_window). The old
+# approach parsed the transcript file, but Claude Code doesn't reliably flush it to
+# the advertised path, so it read 0. Window size also comes from stdin (200k vs 1M).
 in=$(cat)
-tp=$(printf '%s' "$in" | jq -r '.transcript_path // empty')
-used=0
-if [ -n "$tp" ] && [ -f "$tp" ]; then
-  # Fold in document order: a compact_boundary resets context to postTokens (the
-  # last assistant usage is pre-compact and stale until the next reply lands).
-  used=$(jq -s '
-    reduce .[] as $e (0;
-      if ($e.type=="system" and $e.subtype=="compact_boundary" and $e.compactMetadata.postTokens)
-      then $e.compactMetadata.postTokens
-      elif ($e.type=="assistant" and ($e.isSidechain|not) and $e.message.usage)
-      then ($e.message.usage
-            | (.input_tokens//0)+(.cache_read_input_tokens//0)+(.cache_creation_input_tokens//0))
-      else . end)' "$tp" 2>/dev/null)
-fi
+read -r used window < <(printf '%s' "$in" | jq -r \
+  '"\(.context_window.total_input_tokens // 0) \(.context_window.context_window_size // 200000)"')
 [ -z "$used" ] && used=0
+[ -z "$window" ] && window=200000
 
-awk -v u="$used" -v w="$WINDOW" 'BEGIN{
+awk -v u="$used" -v w="$window" 'BEGIN{
   pct = (w>0)? (u/w)*100 : 0
   width = 12
   filled = int(pct*width/100 + 0.5); if(filled>width) filled=width; if(filled<0) filled=0
