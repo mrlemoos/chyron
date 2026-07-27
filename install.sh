@@ -23,6 +23,14 @@ jq --arg cmd "bash \"$dst\"" \
    '.statusLine = {type:"command", command:$cmd}' "$settings" > "$tmp"
 mv "$tmp" "$settings"
 
-echo "installed -> $dst"
-echo "settings patched -> $settings"
-echo "restart Claude Code (or /statusline)"
+# pretty output (falls back to plain if no color tty)
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+  b=$'\033[1m'; g=$'\033[32m'; d=$'\033[2m'; r=$'\033[0m'; ok=$'\033[32m✓'$'\033[0m'
+else
+  b=''; g=''; d=''; r=''; ok='✓'
+fi
+
+printf '\n  %schyron installed%s\n\n' "$b$g" "$r"
+printf '  %s  script    %s%s%s\n' "$ok" "$d" "$dst" "$r"
+printf '  %s  settings  %s%s%s\n' "$ok" "$d" "$settings" "$r"
+printf '\n  %sRestart Claude Code or run %s/statusline%s%s to see it.%s\n\n' "$d" "$r$b" "$r" "$d" "$r"
