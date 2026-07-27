@@ -6,6 +6,8 @@ A [Claude Code](https://claude.com/claude-code) status line that shows how much 
 ████████░░░░ 130.000 tok 65%
 ```
 
+![Chyron status line](assets/screenshot.jpg)
+
 - **Grey** ≤ 50%
 - **Yellow** 51–80%
 - **Red** ≥ 80%
