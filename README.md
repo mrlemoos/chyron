@@ -45,6 +45,27 @@ Or from a clone:
 
 Then restart Claude Code (or reload via `/statusline`).
 
+### Homebrew
+
+```sh
+brew tap mrlemoos/chyron
+brew trust mrlemoos/chyron   # Homebrew requires trusting third-party taps
+brew install chyron
+```
+
+Homebrew installs the script but won't touch your Claude config. Point `~/.claude/settings.json` at the installed binary:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "chyron"
+  }
+}
+```
+
+Then restart Claude Code (or reload via `/statusline`).
+
 ### Manual
 
 1. Copy the script somewhere stable:
