@@ -14,13 +14,20 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+      TAP: mrlemoos/homebrew-chyron
+      GH_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
     steps:
-      - uses: mislav/bump-homebrew-formula-action@v3
-        with:
-          formula-name: chyron
-          homebrew-tap: mrlemoos/homebrew-chyron
-          base-branch: main
-          tag-name: ${{ env.TAG }}
-          download-url: https://github.com/mrlemoos/chyron/archive/refs/tags/${{ env.TAG }}.tar.gz
-        env:
-          COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
+      - name: Bump formula in tap
+        run: |
+          url="https://github.com/mrlemoos/chyron/archive/refs/tags/${TAG}.tar.gz"
+          sha=$(curl -fsSL "$url" | shasum -a 256 | awk '{print $1}')
+          git clone -q "https://x-access-token:${GH_TOKEN}@github.com/${TAP}.git" tap
+          cd tap
+          f=Formula/chyron.rb
+          sed -i -E "s#^  url \".*\"#  url \"${url}\"#" "$f"
+          sed -i -E "s#^  sha256 \".*\"#  sha256 \"${sha}\"#" "$f"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then echo "formula already at ${TAG}, nothing to do"; exit 0; fi
+          git commit -aqm "chyron ${TAG#v}"
+          git push -q
