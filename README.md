@@ -29,7 +29,13 @@ After `/compact`, Claude Code drops the context but writes no new `usage` entry 
 
 ## Install
 
-Run the installer — copies the script to `~/.claude/`, `chmod +x`es it, and points `~/.claude/settings.json` at it (existing settings preserved):
+One-liner (no clone) — copies the script to `~/.claude/`, `chmod +x`es it, and points `~/.claude/settings.json` at it (existing settings preserved):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/mrlemoos/chyron/main/install.sh | bash
+```
+
+Or from a clone:
 
 ```sh
 ./install.sh

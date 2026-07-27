@@ -4,12 +4,18 @@ set -euo pipefail
 
 command -v jq >/dev/null || { echo "need jq" >&2; exit 1; }
 
-src="$(cd "$(dirname "$0")" && pwd)/chyron.sh"
+raw="https://raw.githubusercontent.com/mrlemoos/chyron/main/chyron.sh"
+src="$(cd "$(dirname "$0")" 2>/dev/null && pwd)/chyron.sh"
 dst="$HOME/.claude/chyron.sh"
 settings="$HOME/.claude/settings.json"
 
 mkdir -p "$HOME/.claude"
-install -m 0755 "$src" "$dst"
+if [ -f "$src" ]; then           # local clone
+  install -m 0755 "$src" "$dst"
+else                             # piped: curl | bash
+  curl -fsSL "$raw" -o "$dst"
+  chmod 0755 "$dst"
+fi
 
 [ -f "$settings" ] || echo '{}' > "$settings"
 tmp=$(mktemp)
